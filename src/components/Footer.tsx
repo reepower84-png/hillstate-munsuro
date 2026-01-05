@@ -106,6 +106,11 @@ export default function Footer() {
                 본 사이트는 분양 홍보를 위한 사이트로, 실제 분양 정보는 견본주택에서 확인해주세요.
               </p>
             </div>
+            <div className="mt-4 text-center">
+              <p className="text-gray-600 text-xs">
+                힐스테이트 문수로 센트럴 공식 홍보 사이트
+              </p>
+            </div>
           </div>
         </div>
       </div>

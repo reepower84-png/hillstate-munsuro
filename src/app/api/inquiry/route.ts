@@ -1,6 +1,66 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
+// Discord 웹훅 알림 함수
+async function sendDiscordNotification(name: string, phone: string, inquiry: string) {
+  const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+
+  if (!webhookUrl) {
+    console.warn("Discord webhook URL is not configured");
+    return;
+  }
+
+  const now = new Date();
+  const koreaTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+  const formattedDate = koreaTime.toISOString().replace('T', ' ').substring(0, 19);
+
+  const embed = {
+    title: "새로운 상담 신청이 접수되었습니다!",
+    color: 0xFFB300,
+    fields: [
+      {
+        name: "이름",
+        value: name,
+        inline: true
+      },
+      {
+        name: "연락처",
+        value: phone,
+        inline: true
+      },
+      {
+        name: "문의내용",
+        value: inquiry || "없음",
+        inline: false
+      },
+      {
+        name: "접수시간",
+        value: formattedDate,
+        inline: false
+      }
+    ],
+    footer: {
+      text: "힐스테이트 문수로 센트럴"
+    },
+    timestamp: new Date().toISOString()
+  };
+
+  try {
+    await fetch(webhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        username: "힐스테이트 문수로 센트럴",
+        embeds: [embed]
+      }),
+    });
+  } catch (error) {
+    console.error("Discord webhook error:", error);
+  }
+}
+
 // POST: 새 문의 추가
 export async function POST(request: NextRequest) {
   try {
@@ -35,6 +95,9 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Discord 알림 전송 (비동기로 처리하여 응답 지연 방지)
+    sendDiscordNotification(name, phone, inquiry || "");
 
     return NextResponse.json(
       { message: "상담 신청이 완료되었습니다.", data },
